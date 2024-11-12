@@ -10,9 +10,9 @@ Implementation of the reduced order model mentioned in the paper  "A reduced-ord
 - matplotlib
 
 ### Sample outputs
-- 8 m/s <br />
+- u_bar = 8 m/s <br />
   ![pressure_8](images/pressure_8.png)
-- 9 m/s <br/>
+- u_bar = 9 m/s <br/>
    ![pressure_9](images/pressure_9.png)
 
 ### References
