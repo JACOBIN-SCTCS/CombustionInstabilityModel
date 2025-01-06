@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 class VortexSheddingModel:
 
-    def __init__(self, N=10, L=0.7, a_bar=700, c = 0.006, L_c=0.05, zeta_1 = 29, delta_t = 0.00001, d = 0.025, S_t = 0.35, gamma = 1, initial_value = 0.001, p_bar=100000, u_bar = 8):    
+    def __init__(self, N=10, L=0.7, a_bar=700, c = 0.006, L_c=0.05, zeta_1 = 29, delta_t = 0.00001, d = 0.025, S_t = 0.35, gamma = 1, initial_value = 0.001, p_bar=100000, u_bar = 8, varying_u_bar = False):    
         '''
             Parameters
             -------------------------------------------
@@ -21,7 +21,8 @@ class VortexSheddingModel:
             S_t =  Strouhal number for the step of height d and mean flow velocity u_bar
             initial value  = value for each eta_i
             p_bar = mean static pressure
-            u_bar = mean flow velocity
+            u_bar = mean flow velocity ; array if varying_u_bar = True else scalar
+            varying_u_bar = boolean to check if u_bar is varying with time or not
         '''
 
         self.N = N
@@ -37,6 +38,7 @@ class VortexSheddingModel:
         self.initial_value = initial_value
         self.u_bar = u_bar
         self.p_bar = p_bar
+        self.varying_u_bar = varying_u_bar
 
         self.CIRC_CRIT_KEY = 'CIRC_CRIT'
         self.VORTEX_POSITIONS_KEY = 'POSITIONS' 
@@ -143,8 +145,14 @@ class VortexSheddingModel:
         time = 0
         
         for i in range(steps):
+            
+            if self.varying_u_bar:
+                u_k = self.u_bar[i]
+            else:
+                u_k = self.u_bar
+            
             circulation_available = circulation_remaining + (0.5 * self.delta_t * u_k * u_k) 
-            c_crit = self.circ_critical()
+            c_crit = self.circ_critical(u_bar=u_k)
             vortex_formed = math.floor((circulation_available/ c_crit))
             
             previous_vortices_dict = copy.deepcopy(vortices_dict)
@@ -197,9 +205,20 @@ class VortexSheddingModel:
         
         return (time_values,pressure_values)
 
+NUM_STEPS = 100000
 
-w  = VortexSheddingModel(u_bar=9)
-time_values, pressure_values = w.simulation_loop(10000,0.09)
+# VARIABLE U_BAR TEST EXAMPLE
+u_bar_variation = np.zeros(NUM_STEPS)
+u_bar_variation[:NUM_STEPS//3] = 8
+u_bar_variation[NUM_STEPS//3:2*(NUM_STEPS//3)] = np.linspace(8,9,NUM_STEPS//3)
+u_bar_variation[2*(NUM_STEPS//3):] = 9
+w  = VortexSheddingModel(u_bar=u_bar_variation, varying_u_bar=True)
+
+# CONSTANT U_BAR TEST EXAMPLE (UNCOMMENT TO RUN)
+#u_bar = 9
+#w  = VortexSheddingModel(u_bar=u_bar, varying_u_bar=False)
+
+time_values, pressure_values = w.simulation_loop(NUM_STEPS,0.09)
 
 plt.plot(time_values, pressure_values)
 plt.ylabel('Pressure (Pa)')
